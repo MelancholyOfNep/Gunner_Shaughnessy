@@ -69,14 +69,21 @@ namespace StarterAssets
 		private StarterAssetsInputs _input;
 		private GameObject _mainCamera;
 
+		[Header("Gun Shit")]
 		[SerializeField]
-		private Animator _gunAnimator;
+		public Animator _gunAnimator;
 		[SerializeField]
 		private LayerMask gunlayer;
 		[SerializeField]
 		float gunFireRate;
 		[SerializeField]
 		float gunCooldown;
+		[SerializeField]
+		AudioClip gunSFX;
+		[SerializeField]
+		AudioSource gunSFXSource;
+		[SerializeField]
+		float gunSFXVolume;
 
 		private const float _threshold = 0.01f;
 		
@@ -251,16 +258,25 @@ namespace StarterAssets
 
 					if (Physics.Raycast(ray, out hit, 100f, gunlayer))
 					{
-						Debug.Log("hit");
-						//hitcount++;
-						//EntityClass entityClass;
-						//hit.rigidbody.gameObject.GetComponent<EnemyHealth>().Damage();
-						//entityClass = hit.collider.gameObject.GetComponent<EntityClass>();
-						hit.collider.gameObject.GetComponent<EntityClass>().Damage(10);
-						//entityClass.Damage(damage);
-						Debug.Log(hit.collider.gameObject.GetComponent<EntityClass>().healthPoints);
+						if (hit.collider.gameObject.GetComponent<FadeTransition>() != null)
+						{
+							hit.collider.gameObject.GetComponent<FadeTransition>().SwitchScene();
+						}
+						else if (hit.collider.gameObject.GetComponent<TransitionToLoad>() != null)
+							hit.collider.gameObject.GetComponent<TransitionToLoad>().SwitchScene();
+						else if (hit.collider.gameObject.GetComponent<FadeQuit>() != null)
+							hit.collider.gameObject.GetComponent<FadeQuit>().Quit();
+						else if (hit.collider.gameObject.GetComponent<EnemyScript>() != null)
+						{
+							hit.collider.gameObject.GetComponent<EnemyScript>().Damage(10);
+							if (hit.collider.gameObject.GetComponent<EnemyScript>().currentState != EnemyScript.State.Attacking && hit.collider.gameObject.GetComponent<EnemyScript>().currentState != EnemyScript.State.Combat)
+								hit.collider.gameObject.GetComponent<EnemyScript>().currentState = EnemyScript.State.Combat;
+						}
+						else if (hit.collider.gameObject.GetComponent<EntityClass>() != null)
+							hit.collider.gameObject.GetComponent<EntityClass>().Damage(10);
 					}
 					_gunAnimator.SetBool("Firing", true);
+					gunSFXSource.PlayOneShot(gunSFX, gunSFXVolume);
 					gunCooldown = Time.time + gunFireRate;
 				}
 				else

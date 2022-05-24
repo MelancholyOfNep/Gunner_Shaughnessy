@@ -20,14 +20,14 @@ public class EnemyScript : EntityClass
 	float minCombatDistance = 1;
 	// enum that holds the values for the state machine
 	[SerializeField]
-	enum State { Idle = 0, Patrolling = 1, Combat = 2, Searching = 3, Attacking = 4, Help = 5 };
+	public enum State { Idle = 0, Patrolling = 1, Combat = 2, Searching = 3, Attacking = 4, Help = 5 };
 	
 	// Animator controlling enemy animations
 	Animator animator;
 
 	// The current state of the enemy, determining their behavior at a given time
 	[SerializeField]
-	State currentState = State.Idle;
+	public State currentState = State.Idle;
 	[SerializeField]
 	LayerMask layerMask;
 
@@ -43,8 +43,9 @@ public class EnemyScript : EntityClass
 	[SerializeField]
 	float patrolRange = 3;
 
-	[Header("Searching")]
-	Vector3 searchingDestination;
+	[Header("Combat")]
+	[SerializeField]
+	float combatSpeed;
 
 	[Header("Attacking")]
 	[SerializeField]
@@ -57,13 +58,27 @@ public class EnemyScript : EntityClass
 	//[Header("Spawn")]
 	//public Transform particle;
 
-	[Header("Debug")]
-	[SerializeField]
-	Vector3 targetpos;
-
 	public Transform eyes;
 
-	
+	[SerializeField]
+	AudioSource audioSource;
+	[SerializeField]
+	AudioClip zombieDetectSFX;
+	[SerializeField]
+	AudioClip zombieHurtSFX;
+	[SerializeField]
+	AudioClip zombieAttackSFX;
+	[SerializeField]
+	float zombieDetectVolume;
+	[SerializeField]
+	float zombieHurtVolume;
+	[SerializeField]
+	float zombieAttackVolume;
+
+	[SerializeField]
+	GameObject bloodParticles;
+	[SerializeField]
+	GameObject deathParticles;
 
 	// Start is called before the first frame update
 	void Start()
@@ -81,7 +96,9 @@ public class EnemyScript : EntityClass
 	void Update()
 	{
 		animator.SetInteger("State", (int)currentState);
-		targetpos = target.position;
+
+		if (damagedCheck == true && currentState != State.Attacking)
+			currentState = State.Combat;
 
 		switch (currentState)
 		{
@@ -95,7 +112,6 @@ public class EnemyScript : EntityClass
 				Combat();
 				break;
 			case State.Searching:
-				Searching();
 				break;
 			case State.Attacking:
 				Attacking();
@@ -136,9 +152,11 @@ public class EnemyScript : EntityClass
 		RaycastHit hit;
 		if (Physics.Raycast(ray, out hit, minCombatDistance, layerMask))
 		{
-			if(hit.collider.gameObject.layer == LayerMask.NameToLayer("Player"))
-				//if (hit.transform.tag)
+			if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Player"))
+			{
+				audioSource.PlayOneShot(zombieDetectSFX, zombieDetectVolume);
 				currentState = State.Combat;
+			}
 		}
 		/*if (Vector3.Distance(target.position, this.transform.position) <= minCombatDistance)
 			currentState = State.Combat;*/
@@ -152,21 +170,25 @@ public class EnemyScript : EntityClass
 		RaycastHit hit;
 		if (Physics.Raycast(ray, out hit, minCombatDistance, layerMask))
 		{
+			audioSource.PlayOneShot(zombieDetectSFX, zombieDetectVolume);
 			currentState = State.Combat;
 		}
 
 		else if (Vector3.Distance(patrolDestination, this.transform.position) <= minPatrolDistance)
+		{
 			currentState = State.Idle;
+		}
 	}
 	
 	void Combat()
 	{
+		agent.speed = combatSpeed;
 		if (Vector3.Distance(target.position, this.transform.position) <= attackRange)
 		{
 			agent.speed = 0.0f;
 			currentState = State.Attacking;
 		}
-		else agent.speed = 3.0f;
+		else agent.speed = combatSpeed;
 
 		agent.angularSpeed = 180f;
 		if (updateCounter >= updateFrequency)
@@ -176,23 +198,28 @@ public class EnemyScript : EntityClass
 		}
 		else
 			updateCounter += Time.deltaTime;
-		
-	}
-
-	void Searching()
-	{
-		if (Vector3.Distance(target.position, this.transform.position) <= minCombatDistance)
-			currentState = State.Combat;
 	}
 
 	void Attacking()
 	{
-		agent.speed = 0.0f;
 		if (Vector3.Distance(target.position, this.transform.position) <= attackRange && Time.time > attackTimer + attackCooldown)
 		{
+			audioSource.PlayOneShot(zombieAttackSFX, zombieAttackVolume);
 			target.parent.gameObject.GetComponent<HealthScript>().PlayerDamage(10);
 			attackTimer = Time.time;
 		}
 		currentState = State.Combat;
 	}
+
+    public override void Damage(float damVal)
+    {
+		Instantiate(bloodParticles, eyes.transform.position, Quaternion.Euler(-90, 0, 0));
+		audioSource.PlayOneShot(zombieHurtSFX, zombieHurtVolume);
+		base.Damage(damVal);
+    }
+    public override void Kill()
+    {
+		Instantiate(deathParticles, eyes.transform.position, Quaternion.Euler(-90, 0, 0));
+        base.Kill();
+    }
 }

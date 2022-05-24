@@ -6,7 +6,19 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Basic First Person Character Controller/Scenes/Playground.unity
-    guid: 707acc8dffb72b144bb1ffbe1c965f3d
+    path: Assets/Scenes/MainMenu.unity
+    guid: 63fcfa71229fb6443a6793f4587b5cc9
+  - enabled: 1
+    path: Assets/Scenes/Level1.unity
+    guid: a92f48355d1321844a1330dca7a80ae9
+  - enabled: 1
+    path: Assets/Scenes/Level2.unity
+    guid: 9a1a76a173ecac747994e9169dcf3355
+  - enabled: 1
+    path: Assets/Scenes/LossScene.unity
+    guid: bf2805663834df44b87d9f329f1672ce
+  - enabled: 1
+    path: Assets/Scenes/VictoryScene.unity
+    guid: 89a50c232f8f76f44920546a4ca41fbe
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7, type: 2}

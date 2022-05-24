@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EntityClass : MonoBehaviour
 {
+	public bool damagedCheck;
 	public float healthPoints;
 	//public Transform gitsEffect;
 
@@ -26,6 +27,7 @@ public class EntityClass : MonoBehaviour
 
 	public virtual void Damage(float damVal)
 	{
+		damagedCheck = true;
 		healthPoints -= damVal;
 		if (healthPoints <= 0)
 			Kill();
